@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from PIL import Image
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 import os
 import h5py
@@ -63,15 +65,59 @@ else:
 model = resnet18(weights=ResNet18_Weights.DEFAULT)
 model.fc = nn.Linear(model.fc.in_features, 1)
 
+if os.path.isfile("best_model.pth"):
+    print("Loading Previously Trained Model...from best_model.pth")
+    model.load_state_dict(torch.load("best_model.pth"))
+else:
+    print("Using Pretrained ResNet18 from PyTorch")
+
 device = torch.device("mps")
 model = model.to(device)
-loss_fn = torch.nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+n_benign, n_malignant = 360600, 354
+loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(n_benign/n_benign))
+optimizer = optim.Adam(model.parameters(), lr=1e-4)
 transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
 
-X, y = load_batch("Data/train-image.hdf5", train_gt, 0)
-outputs = model(X)
-loss = loss_fn(outputs, y)
-print(loss.item())
-loss.backward()
-optimizer.step()
+epochs = 2
+batch_size = 1024
+losst = []
+lossv = []
+best_val_loss = float('inf')
+
+for epoch in range(10):
+    print(f"Epoch {epoch + 1} of {epochs}")
+    np.random.shuffle(train_gt)
+    np.random.shuffle(val_gt)
+    for i in tqdm(range(0, train_n, batch_size)):
+        model.train()
+        X, y = load_batch("Data/train-image.hdf5", train_gt, i)
+        optimizer.zero_grad()
+        outputs = model(X)
+        loss = loss_fn(outputs, y)
+        loss.backward()
+        optimizer.step()
+
+        if ((i / batch_size) % 10) == 0:
+            losst.append(loss.item())
+            model.eval()
+            np.random.shuffle(val_gt)
+            with torch.no_grad():
+                X, y = load_batch("Data/train-image.hdf5", val_gt, 0)
+                outputs = model(X)
+                lossv.append(loss_fn(outputs, y).item())
+
+            # Save model if new loss is better
+            if lossv[-1] < best_val_loss:
+                best_val_loss = lossv[-1]
+                print("Saving model...")
+                torch.save(model.state_dict(), "best_model.pth")
+
+            print(f"Train Loss: {losst[-1]}, Val Loss: {lossv[-1]}")
+
+            plt.figure()
+            plt.plot(losst, label="Train Loss")
+            plt.plot(lossv, label="Val Loss")
+            plt.xlabel("Iterations")
+            plt.ylabel("Loss")
+            plt.legend()
+            plt.savefig("loss.png")
