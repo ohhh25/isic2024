@@ -1,4 +1,10 @@
-Data/
+Data/train-image/
+Data/train-metadata.csv
+Data/submission.csv
+Data/test-image.hdf5
+Data/train-image.hdf5
+Data/test-metadata.csv
+Data/sample_submission.csv
 isic-2024-challenge.zip
 .DS_Store
 /.ipynb_checkpoints
