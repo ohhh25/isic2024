@@ -84,7 +84,7 @@ losst = []
 lossv = []
 best_val_loss = float('inf')
 
-for epoch in range(10):
+for epoch in range(epochs):
     print(f"Epoch {epoch + 1} of {epochs}")
     np.random.shuffle(train_gt)
     np.random.shuffle(val_gt)
