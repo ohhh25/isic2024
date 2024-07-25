@@ -121,3 +121,4 @@ for epoch in range(10):
             plt.ylabel("Loss")
             plt.legend()
             plt.savefig("loss.png")
+            plt.close()
