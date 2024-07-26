@@ -65,9 +65,6 @@ def main():
         (train_gt, val_gt), (train_n, val_n) = reload("Data/split.npz")
 
     # Model
-    model = resnet18(weights=ResNet18_Weights.DEFAULT)
-    model.fc = nn.Linear(model.fc.in_features, 1)
-
     if os.path.isfile("best_model.pth"):
         print("Loading Previously Trained Model...from best_model.pth")
         model.load_state_dict(torch.load("best_model.pth"))
@@ -75,19 +72,12 @@ def main():
         print("Using Pretrained ResNet18 from PyTorch")
 
     # Training Setup
-    device = torch.device("mps")
-    model = model.to(device)
     n_benign, n_malignant = 360600, 354
-    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(n_benign/n_benign))
+    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(n_benign/n_malignant))
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
 
-    # Training Hyperparams and Loss Tracking
-    epochs = 2
-    batch_size = 1024
-    losst = []
-    lossv = []
-    best_val_loss = float('inf')
+    epochs, batch_size = 2, 1024
+    losst, lossv, best_val_loss = [], [], float('inf')
 
     # Training Loop
     for epoch in range(epochs):
@@ -135,4 +125,12 @@ def main():
                 plt.close()
 
 if __name__ == "__main__":
+    transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
+
+    model = resnet18(weights=ResNet18_Weights.DEFAULT)
+    model.fc = nn.Linear(model.fc.in_features, 1)
+
+    device = torch.device("mps")
+    model = model.to(device)
+
     main()
