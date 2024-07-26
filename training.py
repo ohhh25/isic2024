@@ -46,7 +46,7 @@ def reload(path):
     val_n = get_statistics("Validation Set", val_gt)
     return (train_gt, val_gt), (train_n, val_n)
 
-def load_batch(hdf5, gt_set, i, size=256):
+def load_batch(hdf5, transforms, gt_set, device, i, size=256):
     gt = gt_set[i:i+size]
     keys, y = list(gt[:, 0]), np.array(gt[:, 1], dtype=int)
     with h5py.File(hdf5, "r") as f:
@@ -89,7 +89,7 @@ def main():
         for i in tqdm(range(0, train_n, batch_size)):
             # Standard Training
             model.train()
-            X, y = load_batch("Data/train-image.hdf5", train_gt, i)
+            X, y = load_batch(hdf5, transforms, train_gt, device, i, size=batch_size)
             optimizer.zero_grad()
             outputs = model(X)
             loss = loss_fn(outputs, y)
@@ -102,7 +102,7 @@ def main():
                 model.eval()
                 np.random.shuffle(val_gt)
                 with torch.no_grad():
-                    X, y = load_batch("Data/train-image.hdf5", val_gt, 0)
+                    X, y = load_batch(hdf5, transforms, val_gt, device, 0, size=batch_size)
                     outputs = model(X)
                     lossv.append(loss_fn(outputs, y).item())
 
@@ -125,6 +125,7 @@ def main():
                 plt.close()
 
 if __name__ == "__main__":
+    hdf5 = "Data/train-image.hdf5"
     transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
 
     model = resnet18(weights=ResNet18_Weights.DEFAULT)
