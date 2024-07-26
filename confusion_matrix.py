@@ -47,7 +47,7 @@ if __name__ == "__main__":
     transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
 
     # Model
-    model = resnet18(weights=ResNet18_Weights.DEFAULT)
+    model = resnet18()
     model.fc = nn.Linear(model.fc.in_features, 1)
     model.load_state_dict(torch.load("best_model.pth"))
 
