@@ -9,3 +9,4 @@ isic-2024-challenge.zip
 .DS_Store
 /.ipynb_checkpoints
 .vscode/launch.json
+__pycache__/
