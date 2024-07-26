@@ -10,17 +10,6 @@ import torch.nn as nn
 
 from training import reload, load_batch
 
-def vis_cmatrix(cmatrix, title, save_path):
-    plt.figure()
-    labels = ["Benign", "Malignant"]
-    sns.heatmap(cmatrix, annot=True, fmt="d", cmap="Blues", 
-                xticklabels=labels, yticklabels=labels)
-    plt.xlabel("Predicted Labels")
-    plt.ylabel("True Labels")
-    plt.title(title)
-    plt.savefig(save_path)
-    plt.close()
-
 def get_cmatrix(gt_set, threshold=0.5, batch_size=1024):
     cmatrix = np.zeros((2, 2), dtype=int)    # Start with zeros
     for i in tqdm(range(0, len(gt_set), batch_size)):
@@ -40,6 +29,17 @@ def get_cmatrix(gt_set, threshold=0.5, batch_size=1024):
 
     return cmatrix
 
+def vis_cmatrix(cmatrix, title, save_path):
+    plt.figure()
+    labels = ["Benign", "Malignant"]
+    sns.heatmap(cmatrix, annot=True, fmt="d", cmap="Blues", 
+                xticklabels=labels, yticklabels=labels)
+    plt.xlabel("Predicted Labels")
+    plt.ylabel("True Labels")
+    plt.title(title)
+    plt.savefig(save_path)
+    plt.close()
+
 if __name__ == "__main__":
     # Data
     hdf5 = "Data/train-image.hdf5"
@@ -56,10 +56,10 @@ if __name__ == "__main__":
     model = model.to(device)
     model.eval();
 
-    train_cmatrix = get_cmatrix(train_gt)
+    train_cmatrix = get_cmatrix(train_gt, threshold=0.5, batch_size=1024)
     vis_cmatrix(train_cmatrix, "Training Set Confusion Matrix", "train_cmatrix.png")
     Image.open("train_cmatrix.png").show()
 
-    val_cmatrix = get_cmatrix(val_gt)
+    val_cmatrix = get_cmatrix(val_gt, threshold=0.5, batch_size=1024)
     vis_cmatrix(val_cmatrix, "Validation Set Confusion Matrix", "val_cmatrix.png")
     Image.open("val_cmatrix.png").show()

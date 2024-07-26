@@ -46,7 +46,7 @@ def reload(path):
     val_n = get_statistics("Validation Set", val_gt)
     return (train_gt, val_gt), (train_n, val_n)
 
-def load_batch(hdf5, transforms, gt_set, device, i, size=256):
+def load_batch(hdf5, transforms, gt_set, device, i, size=1024):
     gt = gt_set[i:i+size]
     keys, y = list(gt[:, 0]), np.array(gt[:, 1], dtype=int)
     with h5py.File(hdf5, "r") as f:
