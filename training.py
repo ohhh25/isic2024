@@ -55,70 +55,84 @@ def load_batch(hdf5, gt_set, i, size=256):
     y = torch.tensor(y, dtype=torch.float32).unsqueeze(1).to(device)
     return X, y
 
-if not os.path.isfile("Data/split.npz"):
-    print("Creating New Train/Val Split...saves to Data/split.npz")
-    (train_gt, val_gt), (train_n, val_n) = preload("Data/train-metadata.csv", "Data/split.npz")
-else:
-    print("Loading Previously Created Train/Val Split...from Data/split.npz")
-    (train_gt, val_gt), (train_n, val_n) = reload("Data/split.npz")
+def main():
+    #  Dataset
+    if not os.path.isfile("Data/split.npz"):
+        print("Creating New Train/Val Split...saves to Data/split.npz")
+        (train_gt, val_gt), (train_n, val_n) = preload("Data/train-metadata.csv", "Data/split.npz")
+    else:
+        print("Loading Previously Created Train/Val Split...from Data/split.npz")
+        (train_gt, val_gt), (train_n, val_n) = reload("Data/split.npz")
 
-model = resnet18(weights=ResNet18_Weights.DEFAULT)
-model.fc = nn.Linear(model.fc.in_features, 1)
+    # Model
+    model = resnet18(weights=ResNet18_Weights.DEFAULT)
+    model.fc = nn.Linear(model.fc.in_features, 1)
 
-if os.path.isfile("best_model.pth"):
-    print("Loading Previously Trained Model...from best_model.pth")
-    model.load_state_dict(torch.load("best_model.pth"))
-else:
-    print("Using Pretrained ResNet18 from PyTorch")
+    if os.path.isfile("best_model.pth"):
+        print("Loading Previously Trained Model...from best_model.pth")
+        model.load_state_dict(torch.load("best_model.pth"))
+    else:
+        print("Using Pretrained ResNet18 from PyTorch")
 
-device = torch.device("mps")
-model = model.to(device)
-n_benign, n_malignant = 360600, 354
-loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(n_benign/n_benign))
-optimizer = optim.Adam(model.parameters(), lr=1e-4)
-transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
+    # Training Setup
+    device = torch.device("mps")
+    model = model.to(device)
+    n_benign, n_malignant = 360600, 354
+    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(n_benign/n_benign))
+    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
 
-epochs = 2
-batch_size = 1024
-losst = []
-lossv = []
-best_val_loss = float('inf')
+    # Training Hyperparams and Loss Tracking
+    epochs = 2
+    batch_size = 1024
+    losst = []
+    lossv = []
+    best_val_loss = float('inf')
 
-for epoch in range(epochs):
-    print(f"Epoch {epoch + 1} of {epochs}")
-    np.random.shuffle(train_gt)
-    np.random.shuffle(val_gt)
-    for i in tqdm(range(0, train_n, batch_size)):
-        model.train()
-        X, y = load_batch("Data/train-image.hdf5", train_gt, i)
-        optimizer.zero_grad()
-        outputs = model(X)
-        loss = loss_fn(outputs, y)
-        loss.backward()
-        optimizer.step()
+    # Training Loop
+    for epoch in range(epochs):
+        # Shuffle Sets
+        print(f"Epoch {epoch + 1} of {epochs}")
+        np.random.shuffle(train_gt)
+        np.random.shuffle(val_gt)
 
-        if ((i / batch_size) % 10) == 0:
-            losst.append(loss.item())
-            model.eval()
-            np.random.shuffle(val_gt)
-            with torch.no_grad():
-                X, y = load_batch("Data/train-image.hdf5", val_gt, 0)
-                outputs = model(X)
-                lossv.append(loss_fn(outputs, y).item())
+        for i in tqdm(range(0, train_n, batch_size)):
+            # Standard Training
+            model.train()
+            X, y = load_batch("Data/train-image.hdf5", train_gt, i)
+            optimizer.zero_grad()
+            outputs = model(X)
+            loss = loss_fn(outputs, y)
+            loss.backward()
+            optimizer.step()
 
-            # Save model if new loss is better
-            if lossv[-1] < best_val_loss:
-                best_val_loss = lossv[-1]
-                print("Saving model...")
-                torch.save(model.state_dict(), "best_model.pth")
+            # Check Loss on Validation Set
+            if ((i / batch_size) % 10) == 0:
+                losst.append(loss.item())
+                model.eval()
+                np.random.shuffle(val_gt)
+                with torch.no_grad():
+                    X, y = load_batch("Data/train-image.hdf5", val_gt, 0)
+                    outputs = model(X)
+                    lossv.append(loss_fn(outputs, y).item())
 
-            print(f"Train Loss: {losst[-1]}, Val Loss: {lossv[-1]}")
+                # Save model if new loss is better
+                if lossv[-1] < best_val_loss:
+                    best_val_loss = lossv[-1]
+                    print("Saving model...")
+                    torch.save(model.state_dict(), "best_model.pth")
 
-            plt.figure()
-            plt.plot(losst, label="Train Loss")
-            plt.plot(lossv, label="Val Loss")
-            plt.xlabel("Iterations")
-            plt.ylabel("Loss")
-            plt.legend()
-            plt.savefig("loss.png")
-            plt.close()
+                print(f"Train Loss: {losst[-1]}, Val Loss: {lossv[-1]}")
+
+                # Create Loss History plot
+                plt.figure()
+                plt.plot(losst, label="Train Loss")
+                plt.plot(lossv, label="Val Loss")
+                plt.xlabel("Iterations")
+                plt.ylabel("Loss")
+                plt.legend()
+                plt.savefig("loss.png")
+                plt.close()
+
+if __name__ == "__main__":
+    main()
