@@ -10,3 +10,4 @@ isic-2024-challenge.zip
 /.ipynb_checkpoints
 .vscode/launch.json
 __pycache__/
+kaggle.json
