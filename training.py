@@ -125,7 +125,7 @@ def main():
                 plt.savefig("loss.png")
                 plt.close()
 
-        if (epoch % 2) == 0:
+        if ((epoch + 1) % 2) == 0:
             print(f"Saving model...to training/epoch{epoch+1}.pth")
             torch.save(model.state_dict(), f"training/epoch{epoch+1}.pth")
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     model = resnet18(weights=ResNet18_Weights.DEFAULT)
     model.fc = nn.Linear(model.fc.in_features, 1)
 
-    device = torch.device("cuda")
+    device = torch.device("mps")
     model = model.to(device)
 
     main()
