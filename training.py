@@ -66,9 +66,9 @@ def main():
         (train_gt, val_gt), (train_n, val_n) = reload("Data/split.npz")
 
     # Model
-    if os.path.isfile("training/recent.pth"):
+    if os.path.isfile("recent.pth"):
         print("Loading Previously Trained Model...from recent.pth")
-        model.load_state_dict(torch.load("training/recent.pth"))
+        model.load_state_dict(torch.load("recent.pth"))
     else:
         print("Using Pretrained ResNet18 from PyTorch")
 
@@ -147,5 +147,5 @@ if __name__ == "__main__":
 
     main()
 
-    print(f"Saving model...to training/recent.pth")
+    print(f"Saving model...to recent.pth")
     torch.save(model.state_dict(), f"recent.pth")

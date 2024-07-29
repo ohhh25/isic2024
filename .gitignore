@@ -11,3 +11,5 @@ isic-2024-challenge.zip
 .vscode/launch.json
 __pycache__/
 kaggle.json
+training/
+logs/
