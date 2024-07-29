@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # Model
     model = resnet18()
     model.fc = nn.Linear(model.fc.in_features, 1)
-    model.load_state_dict(torch.load("best_model.pth"))
+    model.load_state_dict(torch.load("recent.pth"))
 
     # Inference
     device = torch.device("mps")
