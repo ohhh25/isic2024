@@ -5,7 +5,7 @@ import seaborn as sns
 from PIL import Image
 
 import torch
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import resnet34, ResNet34_Weights
 import torch.nn as nn
 
 from training import reload, load_batch
@@ -44,12 +44,12 @@ if __name__ == "__main__":
     # Data
     hdf5 = "Data/train-image.hdf5"
     (train_gt, val_gt), (train_n, val_n) = reload("Data/split.npz")
-    transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
+    transforms = ResNet34_Weights.IMAGENET1K_V1.transforms()
 
     # Model
-    model = resnet18()
+    model = resnet34()
     model.fc = nn.Linear(model.fc.in_features, 1)
-    model.load_state_dict(torch.load("recent.pth"))
+    model.load_state_dict(torch.load("resnet34.pth"))
 
     # Inference
     device = torch.device("mps")

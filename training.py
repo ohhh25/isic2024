@@ -10,7 +10,7 @@ import io
 import logging
 
 import torch
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import resnet34, ResNet34_Weights
 import torch.nn as nn
 import torch.optim as optim
 
@@ -87,9 +87,6 @@ def main():
         np.random.shuffle(train_gt)
         np.random.shuffle(val_gt)
 
-        total_loss = 0
-        subset_loss = 0
-
         for i in tqdm(range(0, train_n, batch_size)):
             # Standard Training
             model.train()
@@ -133,13 +130,13 @@ if __name__ == "__main__":
     os.makedirs("logs", exist_ok=True)
     os.makedirs("training", exist_ok=True)
 
-    logging.basicConfig(filename='logs/training.log', level=logging.INFO, 
+    logging.basicConfig(filename='logs/resnet34.log', level=logging.INFO, 
         format='%(asctime)s - %(levelname)s - %(message)s')
 
     hdf5 = "Data/train-image.hdf5"
-    transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
+    transforms = ResNet34_Weights.IMAGENET1K_V1.transforms()
 
-    model = resnet18(weights=ResNet18_Weights.DEFAULT)
+    model = resnet34(weights=ResNet34_Weights.DEFAULT)
     model.fc = nn.Linear(model.fc.in_features, 1)
 
     device = torch.device("mps")
@@ -147,5 +144,5 @@ if __name__ == "__main__":
 
     main()
 
-    print(f"Saving model...to recent.pth")
-    torch.save(model.state_dict(), f"recent.pth")
+    print(f"Saving model...to resnet34.pth")
+    torch.save(model.state_dict(), f"resnet34.pth")
