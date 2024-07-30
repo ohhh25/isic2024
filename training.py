@@ -66,11 +66,11 @@ def main():
         (train_gt, val_gt), (train_n, val_n) = reload("Data/split.npz")
 
     # Model
-    if os.path.isfile("recent.pth"):
-        print("Loading Previously Trained Model...from recent.pth")
-        model.load_state_dict(torch.load("recent.pth"))
+    if os.path.isfile("resnet34.pth"):
+        print("Loading Previously Trained Model...from resnet34.pth")
+        model.load_state_dict(torch.load("resnet34.pth"))
     else:
-        print("Using Pretrained ResNet18 from PyTorch")
+        print("Using Pretrained ResNet34 from PyTorch")
 
     # Training Setup
     n_benign, n_malignant = 360600, 354
