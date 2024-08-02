@@ -139,7 +139,7 @@ if __name__ == "__main__":
     model = resnet34(weights=ResNet34_Weights.DEFAULT)
     model.fc = nn.Linear(model.fc.in_features, 1)
 
-    device = torch.device("mps")
+    device = torch.device("cuda")
     model = model.to(device)
 
     main()
