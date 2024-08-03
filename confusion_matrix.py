@@ -45,14 +45,14 @@ if __name__ == "__main__":
     hdf5 = "Data/train-image.hdf5"
     (train_gt, val_gt), (train_n, val_n) = reload("Data/split.npz")
     transforms = ResNet34_Weights.IMAGENET1K_V1.transforms()
+    device = torch.device("mps")
 
     # Model
     model = resnet34()
     model.fc = nn.Linear(model.fc.in_features, 1)
-    model.load_state_dict(torch.load("resnet34.pth"))
+    model.load_state_dict(torch.load("resnet34.pth", map_location=device))
 
     # Inference
-    device = torch.device("mps")
     model = model.to(device)
     model.eval();
 
