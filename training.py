@@ -10,7 +10,7 @@ import io
 import logging
 
 import torch
-from torchvision.models import resnet34, ResNet34_Weights
+from torchvision.models import resnet18, ResNet18_Weights
 import torch.nn as nn
 import torch.optim as optim
 
@@ -66,18 +66,19 @@ def main():
         (train_gt, val_gt), (train_n, val_n) = reload("Data/split.npz")
 
     # Model
-    if os.path.isfile("resnet34.pth"):
-        print("Loading Previously Trained Model...from resnet34.pth")
-        model.load_state_dict(torch.load("resnet34.pth"))
+    if os.path.isfile("resnet18.pth"):
+        print("Loading Previously Trained Model...from resnet18.pth")
+        state_dict = torch.load("resnet18.pth")
+        model.load_state_dict(state_dict["model"])
+        optimizer.load_state_dict(state_dict["optimizer"])
     else:
-        print("Using Pretrained ResNet34 from PyTorch")
+        print("Using Pretrained ResNet18 from PyTorch")
 
     # Training Setup
     n_benign, n_malignant = 360600, 354
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(n_benign/n_malignant))
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
-    epochs, batch_size = 10, 256
+    epochs, batch_size = 20, 256
     losst, lossv = [], []
 
     # Training Loop
@@ -124,25 +125,30 @@ def main():
 
         if ((epoch + 1) % 2) == 0:
             print(f"Saving model...to training/epoch{epoch+1}.pth")
-            torch.save(model.state_dict(), f"training/epoch{epoch+1}.pth")
+            torch.save({"model": model.state_dict(),
+                        "optimizer": optimizer.state_dict()}, 
+                        f"training/epoch{epoch+1}.pth")
 
 if __name__ == "__main__":
     os.makedirs("logs", exist_ok=True)
     os.makedirs("training", exist_ok=True)
 
-    logging.basicConfig(filename='logs/resnet34.log', level=logging.INFO, 
+    logging.basicConfig(filename='logs/resnet18.log', level=logging.INFO, 
         format='%(asctime)s - %(levelname)s - %(message)s')
 
     hdf5 = "Data/train-image.hdf5"
-    transforms = ResNet34_Weights.IMAGENET1K_V1.transforms()
+    transforms = ResNet18_Weights.IMAGENET1K_V1.transforms()
 
-    model = resnet34(weights=ResNet34_Weights.DEFAULT)
+    model = resnet18(weights=ResNet18_Weights.DEFAULT)
     model.fc = nn.Linear(model.fc.in_features, 1)
+    optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
-    device = torch.device("cuda")
+    device = torch.device("mps")
     model = model.to(device)
 
     main()
 
-    print(f"Saving model...to resnet34.pth")
-    torch.save(model.state_dict(), f"resnet34.pth")
+    print(f"Saving model...to resnet18.pth")
+    torch.save({"model": model.state_dict(),
+                "optimizer": optimizer.state_dict()}, 
+                f"resnet18.pth")
