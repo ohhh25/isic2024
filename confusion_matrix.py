@@ -50,7 +50,8 @@ if __name__ == "__main__":
     # Model
     model = resnet34()
     model.fc = nn.Linear(model.fc.in_features, 1)
-    model.load_state_dict(torch.load("resnet34.pth", map_location=device))
+    state_dict = torch.load("resnet34.pth", map_location=device)
+    model.load_state_dict(state_dict["model"])
 
     # Inference
     model = model.to(device)
